@@ -6,11 +6,21 @@
 #' @noRd
 app_ui <- function(request) {
   tagList(
-    # Leave this function for adding external resources
+    marcel(filename = "marcel.md"),
     golem_add_external_resources(),
-    # Your application UI logic 
-    fluidPage(
-      h1("tableaudelta")
+    tableau_de_bord(
+      dash_sidebar(
+        dash_title(title = "Bonjour Quebec", icon="icon-bq_icons_planet:"),
+        badge(),
+        textInput("name", "What's your name?"),
+        mod_modal_helpbutton_ui("info1", "Jargon")
+      ), 
+      dash_tabs(
+        #maybe a little strange, but here we pass in the UI of a modal and the id that defines it.
+        tab_map(title = "Map", id = "map", outputFunction = mod_map_select_ui),
+        tab_map(title = "Site Map", id = "sitemap", outputFunction = mod_map_select_ui),
+        tab_map(title = "Ouranos", id = "ouranos_map", outputFunction = mod_map_select_ui),
+        tab_gen())
     )
   )
 }
@@ -30,10 +40,10 @@ golem_add_external_resources <- function(){
   )
  
   tags$head(
-    favicon(),
+    favicon(ext = 'png'),
     bundle_resources(
       path = app_sys('app/www'),
-      app_title = 'tableaudelta'
+      app_title = 'mapselector'
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert() 
