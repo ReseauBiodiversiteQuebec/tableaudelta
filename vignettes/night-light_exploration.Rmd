@@ -1,0 +1,42 @@
+---
+title: "night-light_exploration"
+author: "Victor Cameron"
+date: "2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Import data
+
+### Réseau routier
+```{r}
+library(sf)
+library(terra)
+
+carteQc <- mapselector::regions_simplified_Ouranos
+carteQc_r <- vect(carteQc)
+plot(carteQc_r)
+
+night_light <- rast("./data/VNL_v2_npp_2021_global_vcmslcfg_c202203152300.average_masked.tif")
+night_light_Qc <- crop(night_light, carteQc_r)
+values(night_light_Qc)[values(night_light_Qc) == 0] <- NA
+plot(night_light_Qc, add = TRUE)
+
+```
+
+
+
+## 2. Explore data
+
+```{r}
+
+```
+
+## 3. Format data
+
+```{r}
+
+```

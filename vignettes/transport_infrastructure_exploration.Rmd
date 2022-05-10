@@ -11,18 +11,75 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## 1. Import data
 
+### Réseau routier
 ```{r}
+library(sf)
+library(terra)
+library(tidyverse)
 
+carteQc <- mapselector::regions_simplified_Ouranos
+st_cast(st_cast(carteQc$geometry, to = "MULTILINESTRING"), to = "LINESTRING") 
+plot(carteQc$geometry)
+
+routes_sf <- read_sf("./data/ESRI(SHP)/Reseau_routier.shp")
+# Guide utilisateur : https://adressesquebec.gouv.qc.ca/pdf/guide_utilisateurs.pdf
+routes_proj <- st_transform(routes_sf, st_crs(carteQc$geometry))
+rm("routes_sf")
+# plot(routes_proj, col = "blue", add = TRUE)
 ```
+
+
 
 ## 2. Explore data
 
 ```{r}
+#creating grid
+grid <- sf::st_make_grid(sf::st_bbox(carteQc),
+                         cellsize = 5, square = TRUE) %>%
+  sf::st_as_sf() %>%
+  dplyr::mutate(cell = 1:nrow(.))
+grid <- crop(vect(grid), vect(carteQc))
 
+grid_r <- rast(grid)
+values(grid_r) <- 0
+grid_r <- mask(grid_r, vect(carteQc))
+plot(grid_r)
+
+# Select autoroutes
+i = which(routes_proj$ClsRte == "Autoroute" & is.na(routes_proj$CaractRte))
+autoroutes_routes_proj <- routes_proj[i,]
+
+# Count number of autoroute per grid cell
+split_count <- st_intersection(autoroutes_routes_proj[1:100,], grid) %>%
+                  group_by(cell) %>%
+                  count() %>%
+                  arrange(desc(n))
+
+plot(grid)
+plot(split_count, add = TRUE)
 ```
 
 ## 3. Format data
 
 ```{r}
 
+```
+
+
+
+## Other
+
+```{r}
+library(sf)
+
+maritime <- read_sf("./data/ESRI(SHP)/Transport_maritime.shp")
+
+maritime |> str()
+
+carteQc <- mapselector::regions_simplified_Ouranos
+plot(carteQc$geometry)
+# write_sf(carteQc, "./data/carte_contour_Qc.shp")
+
+maritime_proj <- st_transform(maritime$geometry, crs = st_crs(carteQc$geometry))
+plot(maritime_proj, lwd = 3, col = "red", add = TRUE)
 ```

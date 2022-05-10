@@ -1,0 +1,113 @@
+---
+title: "invasive_species_exploration"
+author: "Victor Cameron"
+date: "2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Import data
+
+### Espèces invasives
+```{r}
+# Liste d'espèces invasives selon le programme sentinelle
+espece_invasives = data.frame(nom_scientifique = c(## Insectes
+                                                  "Harmonia axyridis",
+                                                  "Anoplophora glabripennis",
+                                                  "Popillia japonica",
+                                                  ## Mollusques & Crustacés
+                                                  "Bythotrephes longimanus",
+                                                  "Eriocheir sinensis",
+                                                  "Hemimysis anomala",
+                                                  "Orconectes rusticus",
+                                                  "Dreissena bugensis",
+                                                  "Dreissena polymorpha",
+                                                  "Potamopyrgus antipodarum",
+                                                  "Corbicula fluminea",
+                                                  "Echinogammarus ischnus",
+                                                  "Bellamya chinensis",
+                                                  ## Oiseaux et mammifères
+                                                  "Cervus elaphus",
+                                                  "Cygnus olor",
+                                                  ## Reptiles et poissons
+                                                  "Ctenopharyngodon idella",
+                                                  "Lepomis cyanellus",
+                                                  "Pseudorasbora parva",
+                                                  "Scardinius erythrophthalmus",
+                                                  "Neogobius melanostomus",
+                                                  "Carassius auratus",
+                                                  "Tinca tinca",
+                                                  "Trachemys scripta elegans",
+                                                  "Channa", # Tête de serpent
+                                                  "Parachanna", # Tête de serpent
+                                                  ## Plantes flottantes
+                                                  "Trapa natans",
+                                                  "Nymphoides peltata",
+                                                  "Hydrocharis morsus-ranae",
+                                                  "Eichhornia crassipes",
+                                                  "Pistia stratiotes",
+                                                  "Salvinia", # Genre
+                                                  ## Plantes submergées
+                                                  "Cabomba caroliniana",
+                                                  "Brazilian waterweed",
+                                                  "Hydrilla verticillata",
+                                                  "Myriophyllum aquaticum",
+                                                  "Myriophyllum spicatum",
+                                                  "Potamogeton crispus",
+                                                  ## Plantes émergentes
+                                                  "Phalaris arundinacea",
+                                                  "Butomus umbellatus",
+                                                  "Glyceria maxima",
+                                                  "Iris pseudacorus",
+                                                  "Rorippa amphibia",
+                                                  "Phragmites australis australis",
+                                                  "Lythrum salicaria",
+                                                  "Stratiotes aloides",
+                                                  ## Plantes de milieux terrestres
+                                                  "Alliaria petiolata",
+                                                  "Anthriscus sylvestris",
+                                                  "Heracleum sphondylium",
+                                                  "Heracleum mantegazzianum",
+                                                  "Symphytum officinale",
+                                                  "Vincetoxicum rossicum",
+                                                  "Vincetoxicum nigrum",
+                                                  "Aegopodium podagraria",
+                                                  "Acer platanoides",
+                                                  "Acer negundo",
+                                                  "Galium mollugo",
+                                                  "Impatiens glandulifera",
+                                                  "Miscanthus sacchariflorus",
+                                                  "Frangula alnus",
+                                                  "Rhamnus carthartica",
+                                                  "Ulmus pumila",
+                                                  "Pastinaca sativa",
+                                                  "Petasites japonicus",
+                                                  "Reynoutria xbohemica",
+                                                  "Reynoutria sachalinensis",
+                                                  "Reynoutria japonica",
+                                                  "Helianthus tuberosus",
+                                                  "Valeriana officinalis"),
+                                no_ref = NA_integer_)
+
+# Match ref number
+# - ITIS ?
+# - GBIF ?
+```
+
+
+
+## 2. Explore data
+
+```{r}
+
+```
+
+## 3. Format data
+
+```{r}
+
+```
+

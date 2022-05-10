@@ -1,0 +1,49 @@
+---
+title: "night-light_exploration"
+author: "Victor Cameron"
+date: "2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Import data
+
+### Réseau routier
+```{r}
+library(sf)
+library(terra)
+
+carteQc <- mapselector::regions_simplified_Ouranos
+carteQc_r <- vect(carteQc)
+plot(carteQc_r)
+
+# pop_sf <- read_sf("./data/griddedPopulationCanada10km_2016_shp/griddedPopulationCanada10km_2016.shp")
+pop <- system.file("./data/griddedPopulationCanada10km_2016_shp/griddedPopulationCanada10km_2016.shp", package="terra")
+pop_trans <- st_transform(pop_sf, st_crs(carteQc_r))
+pop_r <- vect(pop_trans)
+pop_Qc <- crop(pop_r, carteQc_r)
+# Total population
+pop_Qc$log_TOT_POP2A <- log(pop_Qc$TOT_POP2A)
+i <- which(is.infinite(pop_Qc$log_TOT_POP2A))
+pop_Qc[i,"log_TOT_POP2A"] <- 0
+plot(pop_Qc, "log_TOT_POP2A")
+
+```
+
+
+
+## 2. Explore data
+
+```{r}
+summary(pop_Qc[,"log_TOT_POP2A"])
+hist(pop_Qc$log_TOT_POP2A)
+```
+
+## 3. Format data
+
+```{r}
+
+```
