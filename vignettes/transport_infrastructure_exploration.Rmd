@@ -1,5 +1,5 @@
 ---
-title: "transport_infrastructure_exploration"
+title: "pipelineTransportInfrastructure"
 author: "Victor Cameron"
 date: "2022"
 output: html_document
@@ -9,77 +9,117 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 1. Import data
-
-### Réseau routier
 ```{r}
 library(sf)
 library(terra)
 library(tidyverse)
+```
 
-carteQc <- mapselector::regions_simplified_Ouranos
-st_cast(st_cast(carteQc$geometry, to = "MULTILINESTRING"), to = "LINESTRING") 
-plot(carteQc$geometry)
+On charge une shapefile du Québec, notre zone de référence.
+```{r}
+mask <- terra::vect("./data/quebec_nad83.shp")
+study_area_ascott <- terra::vect("./data/Contour_boise.shp")
+study_area_ascott <- terra::project(study_area_ascott, mask)
+```
+
+On charge les données du réseau routier du Québec
+```{r}
+routes <- terra::vect("./data/ESRI(SHP)/Reseau_routier.shp")
+routes <- terra::project(routes, mask)
 
 routes_sf <- read_sf("./data/ESRI(SHP)/Reseau_routier.shp")
-# Guide utilisateur : https://adressesquebec.gouv.qc.ca/pdf/guide_utilisateurs.pdf
-routes_proj <- st_transform(routes_sf, st_crs(carteQc$geometry))
-rm("routes_sf")
-# plot(routes_proj, col = "blue", add = TRUE)
+routes_sf <- st_transform(routes_sf, st_crs(mask))
+```
+
+## 0. Rasteriser les routes
+
+```{r}
+# Avec gadal_rasterize()
+## load the packages
+require("rgdal")
+devtools:::install_github("gearslaboratory/gdalUtils")
+require("gdalUtils")
+
+## Prep le raster 1km/1km
+mask_r <- terra::rast(mask)
+terra::res(mask_r) <- c(1000, 1000)
+terra::values(mask_r) <- 1
+mask_r <- terra::mask(mask_r, mask)
+
+## Sauver le raster mask
+raster::writeRaster(raster::raster(mask_r), filename="./data/test.tif", overwrite=TRUE)
+
+## Resterize
+routes_r <- gdalUtils::gdal_rasterize(burn=c(0,0,128), src_datasource="./data/ESRI(SHP)/Reseau_routier.shp", dst_filename="./data/test.tif", output_Raster=TRUE)
+
+## Cellules 0 = pas de routes
+routes_r <- 1 - routes_r
+
+# Sauver le raster
+raster::writeRaster(routes_r, filename="./data/routes_pres_absence.tif", overwrite=TRUE)
 ```
 
 
-
-## 2. Explore data
+## 1. Calcul de la densité de routes sur la zone de référence
 
 ```{r}
-#creating grid
-grid <- sf::st_make_grid(sf::st_bbox(carteQc),
-                         cellsize = 5, square = TRUE) %>%
+table(routes$ClsRte)
+
+# Selection des routes achalandées
+# - Ne comprends pas les routes forestières et isolées
+routesOfI <- c("Artère", "Autoroute", "Collectrice de transit", "Collectrice municipale", "Locale", "Nationale", "Régionale", "Rue piétonne")
+i <- which(routes$ClsRte %in% routesOfI)
+routesSel <- routes[i,]
+```
+
+
+## 2. Calcul du stresseur sur une zone d’étude
+
+Le calcul de la densité de route  par cellule est computationellement lourd. Pour le bien de l'exploration, les calaculs sont limités à la zone d'étude.
+
+```{r}
+study_area <- terra::crop(routesSel, study_area_ascott)
+terra::plot(study_area)
+```
+
+Calcul de la densité de route
+```{r}
+# Création de la grille
+# - cellules de 1000m x 1000m
+library(dplyr)
+grid <- sf::st_make_grid(sf::st_bbox(study_area_ascott),
+                         cellsize = 1000, square = TRUE) %>%
   sf::st_as_sf() %>%
-  dplyr::mutate(cell = 1:nrow(.))
-grid <- crop(vect(grid), vect(carteQc))
+  dplyr::mutate(cell = 1:nrow(.)) %>%
+  sf::st_as_sf()
 
-grid_r <- rast(grid)
-values(grid_r) <- 0
-grid_r <- mask(grid_r, vect(carteQc))
-plot(grid_r)
+grid |> terra::plot()
+terra::plot(study_area, add = TRUE)
+```
 
-# Select autoroutes
-i = which(routes_proj$ClsRte == "Autoroute" & is.na(routes_proj$CaractRte))
-autoroutes_routes_proj <- routes_proj[i,]
 
-# Count number of autoroute per grid cell
-split_count <- st_intersection(autoroutes_routes_proj[1:100,], grid) %>%
+```{r}
+split_count <- sf::st_intersection(sf::st_as_sf(study_area), grid) %>%
                   group_by(cell) %>%
                   count() %>%
                   arrange(desc(n))
 
-plot(grid)
-plot(split_count, add = TRUE)
-```
+split_count$geometry <- NULL
+RteDst <- dplyr::left_join(grid, split_count) %>% 
+  sf::st_sf(sf_column_name = "x")
 
-## 3. Format data
+RteDst$n[is.na(RteDst$n)] <- 0
 
-```{r}
+# Normaliser la densité
+RteDst$n <- (RteDst$n - min(RteDst$n, na.rm = TRUE))/(max(RteDst$n, na.rm = TRUE) - min(RteDst$n, na.rm = TRUE))
+RteDst <- terra::vect(RteDst)
 
-```
+# Plot
+color <- colorRampPalette(c("grey90", "steelblue4", "steelblue2", 
+                            "steelblue1", "gold", "red1", "red4"),
+                          bias = 1)
+fixBreak <- seq(0, 1, length = 99) |> round(2)
 
-
-
-## Other
-
-```{r}
-library(sf)
-
-maritime <- read_sf("./data/ESRI(SHP)/Transport_maritime.shp")
-
-maritime |> str()
-
-carteQc <- mapselector::regions_simplified_Ouranos
-plot(carteQc$geometry)
-# write_sf(carteQc, "./data/carte_contour_Qc.shp")
-
-maritime_proj <- st_transform(maritime$geometry, crs = st_crs(carteQc$geometry))
-plot(maritime_proj, lwd = 3, col = "red", add = TRUE)
+terra::plot(RteDst, "n", color(length(fixBreak)), breaks = fixBreak)
+terra::plot(study_area, add = TRUE)
 ```
